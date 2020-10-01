@@ -91,8 +91,8 @@ static void HCD_Port_IRQHandler(HCD_HandleTypeDef *hhcd);
   */
 
 /** @defgroup HCD_Exported_Functions_Group1 Initialization and de-initialization functions
- *  @brief    Initialization and Configuration functions
- *
+  *  @brief    Initialization and Configuration functions
+  *
 @verbatim
  ===============================================================================
           ##### Initialization and de-initialization functions #####
@@ -563,12 +563,6 @@ void HAL_HCD_IRQHandler(HCD_HandleTypeDef *hhcd)
       HAL_HCD_SOF_Callback(hhcd);
 #endif /* USE_HAL_HCD_REGISTER_CALLBACKS */
 
-      // Added hack to re-enable the NAK interrupt because leaving it off is bad
-      for (i = 0U; i < hhcd->Init.Host_channels; i++)
-      {
-       USBx_HC(i)->HCINTMSK |= USB_OTG_HCINT_NAK;
-      }
-
       __HAL_HCD_CLEAR_FLAG(hhcd, USB_OTG_GINTSTS_SOF);
     }
 
@@ -604,6 +598,18 @@ void HAL_HCD_IRQHandler(HCD_HandleTypeDef *hhcd)
     }
   }
 }
+
+
+/**
+  * @brief  Handles HCD Wakeup interrupt request.
+  * @param  hhcd HCD handle
+  * @retval HAL status
+  */
+void HAL_HCD_WKUP_IRQHandler(HCD_HandleTypeDef *hhcd)
+{
+  UNUSED(hhcd);
+}
+
 
 /**
   * @brief  SOF callback.
@@ -724,7 +730,9 @@ __weak void HAL_HCD_HC_NotifyURBChange_Callback(HCD_HandleTypeDef *hhcd, uint8_t
   * @param  pCallback pointer to the Callback function
   * @retval HAL status
   */
-HAL_StatusTypeDef HAL_HCD_RegisterCallback(HCD_HandleTypeDef *hhcd, HAL_HCD_CallbackIDTypeDef CallbackID, pHCD_CallbackTypeDef pCallback)
+HAL_StatusTypeDef HAL_HCD_RegisterCallback(HCD_HandleTypeDef *hhcd,
+                                           HAL_HCD_CallbackIDTypeDef CallbackID,
+                                           pHCD_CallbackTypeDef pCallback)
 {
   HAL_StatusTypeDef status = HAL_OK;
 
@@ -812,7 +820,7 @@ HAL_StatusTypeDef HAL_HCD_RegisterCallback(HCD_HandleTypeDef *hhcd, HAL_HCD_Call
 
 /**
   * @brief  Unregister an USB HCD Callback
-  *         USB HCD callabck is redirected to the weak predefined callback
+  *         USB HCD callback is redirected to the weak predefined callback
   * @param  hhcd USB HCD handle
   * @param  CallbackID ID of the callback to be unregistered
   *         This parameter can be one of the following values:
@@ -916,7 +924,8 @@ HAL_StatusTypeDef HAL_HCD_UnRegisterCallback(HCD_HandleTypeDef *hhcd, HAL_HCD_Ca
   * @param  pCallback pointer to the USB HCD Host Channel Notify URB Change Callback function
   * @retval HAL status
   */
-HAL_StatusTypeDef HAL_HCD_RegisterHC_NotifyURBChangeCallback(HCD_HandleTypeDef *hhcd, pHCD_HC_NotifyURBChangeCallbackTypeDef pCallback)
+HAL_StatusTypeDef HAL_HCD_RegisterHC_NotifyURBChangeCallback(HCD_HandleTypeDef *hhcd,
+                                                             pHCD_HC_NotifyURBChangeCallbackTypeDef pCallback)
 {
   HAL_StatusTypeDef status = HAL_OK;
 
@@ -951,7 +960,7 @@ HAL_StatusTypeDef HAL_HCD_RegisterHC_NotifyURBChangeCallback(HCD_HandleTypeDef *
 }
 
 /**
-  * @brief  UnRegister the USB HCD Host Channel Notify URB Change Callback
+  * @brief  Unregister the USB HCD Host Channel Notify URB Change Callback
   *         USB HCD Host Channel Notify URB Change Callback is redirected to the weak HAL_HCD_HC_NotifyURBChange_Callback() predefined callback
   * @param  hhcd HCD handle
   * @retval HAL status
@@ -988,8 +997,8 @@ HAL_StatusTypeDef HAL_HCD_UnRegisterHC_NotifyURBChangeCallback(HCD_HandleTypeDef
   */
 
 /** @defgroup HCD_Exported_Functions_Group3 Peripheral Control functions
- *  @brief   Management functions
- *
+  *  @brief   Management functions
+  *
 @verbatim
  ===============================================================================
                       ##### Peripheral Control functions #####
@@ -1047,8 +1056,8 @@ HAL_StatusTypeDef HAL_HCD_ResetPort(HCD_HandleTypeDef *hhcd)
   */
 
 /** @defgroup HCD_Exported_Functions_Group4 Peripheral State functions
- *  @brief   Peripheral State functions
- *
+  *  @brief   Peripheral State functions
+  *
 @verbatim
  ===============================================================================
                       ##### Peripheral State functions #####
@@ -1348,8 +1357,6 @@ static void HCD_HC_IN_IRQHandler(HCD_HandleTypeDef *hhcd, uint8_t chnum)
       /* ... */
     }
     __HAL_HCD_CLEAR_HC_INT(ch_num, USB_OTG_HCINT_NAK);
-    // Added hack to disable the NAK interrupt completely (it'll be re-enabled in SOF)
-    USBx_HC(chnum)->HCINTMSK &= ~USB_OTG_HCINT_NAK;
   }
   else
   {
