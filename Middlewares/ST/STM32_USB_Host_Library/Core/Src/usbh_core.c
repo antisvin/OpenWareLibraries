@@ -308,6 +308,7 @@ USBH_StatusTypeDef USBH_SelectInterface(USBH_HandleTypeDef *phost, uint8_t inter
   */
 uint8_t USBH_GetActiveClass(USBH_HandleTypeDef *phost)
 {
+  // OWL: todo: this currently returns the first class in the descriptor, not necessarily the active one
   return (phost->device.CfgDesc.Itf_Desc[0].bInterfaceClass);
 }
 
@@ -675,7 +676,8 @@ USBH_StatusTypeDef  USBH_Process(USBH_HandleTypeDef *phost)
 
         for (idx = 0U; idx < USBH_MAX_NUM_SUPPORTED_CLASS; idx++)
         {
-          if (phost->pClass[idx]->ClassCode == phost->device.CfgDesc.Itf_Desc[0].bInterfaceClass)
+	  // OWL: updated to check all device interfaces, not just the first one
+	  if(phost->pClass[idx] != NULL && USBH_FindInterface(phost, phost->pClass[idx]->ClassCode, 0xFFU, 0xFFU) != 0xFFU)
           {
             phost->pActiveClass = phost->pClass[idx];
             break;
